@@ -16,7 +16,7 @@ no dependencies.
 | Version | Tag | What it adds |
 |---|---|---|
 | **Version 1 — Basic** | `v1.0` | Courses (add/edit/delete), assignments (add/edit/delete), priority, status, `localStorage` persistence |
-| **Version 2 — Enhanced** | `v2.0` | Grades + dashboard (total, completed, remaining, overdue, graded-only average), overdue detection, per-course progress, search/filter/sort, dark mode, JSON export & import |
+| **Version 2 — Enhanced** | `v2.0` | Grades + dashboard (total, completed, remaining, overdue, graded-only average), overdue detection, per-course progress, search/filter/sort, a colour-coded modern interface, dark mode, JSON export & import |
 
 ```bash
 git checkout v1.0    # demo the basic version
@@ -35,6 +35,11 @@ editable straight from the table row.
 **Dashboard** — Total, Completed, Remaining, Overdue and Average grade, plus a completion bar.
 *Overdue* means past its due date and not yet completed. The **average uses graded assignments
 only** — ungraded work is skipped rather than counted as zero.
+
+**Colour** — the interface uses colour to carry meaning: priority chips (High red, Medium
+amber, Low green), status chips (Not Started grey, In Progress blue, Completed green), grade
+bands with an A–F badge (A green → F red), a colour assigned to each course that follows it
+into the table, and due dates that turn amber in the last 3 days and red once overdue.
 
 **Extras in v2** — search by title or course, filter by course/status (including "overdue
 only"), five sort orders, a remembered dark mode, and JSON export/import for backups.

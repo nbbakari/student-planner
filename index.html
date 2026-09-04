@@ -9,9 +9,12 @@
 <body>
   <header class="site-header">
     <div class="wrap header-inner">
-      <div>
-        <h1>Student Study Planner &amp; Grade Dashboard</h1>
-        <p class="tagline">Track your courses, assignments, priorities, progress and grades.</p>
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">SP</span>
+        <div>
+          <h1>Student Study Planner &amp; Grade Dashboard</h1>
+          <p class="tagline">Track your courses, assignments, priorities, progress and grades.</p>
+        </div>
       </div>
       <div class="header-actions">
         <button type="button" class="btn ghost" id="theme-toggle" aria-pressed="false">Dark mode</button>
@@ -28,19 +31,59 @@
     <section class="dashboard" aria-labelledby="dashboard-heading">
       <h2 id="dashboard-heading" class="sr-only">Dashboard summary</h2>
       <ul class="stat-grid">
-        <li class="stat"><span class="stat-value" id="stat-total">0</span><span class="stat-label">Total</span></li>
-        <li class="stat stat-good"><span class="stat-value" id="stat-completed">0</span><span class="stat-label">Completed</span></li>
-        <li class="stat"><span class="stat-value" id="stat-remaining">0</span><span class="stat-label">Remaining</span></li>
-        <li class="stat stat-bad"><span class="stat-value" id="stat-overdue">0</span><span class="stat-label">Overdue</span></li>
+        <li class="stat stat-total">
+          <span class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h11M4 10h11M4 14.5h7"/></svg>
+          </span>
+          <span class="stat-text">
+            <span class="stat-value" id="stat-total">0</span>
+            <span class="stat-label">Total</span>
+          </span>
+        </li>
+        <li class="stat stat-good">
+          <span class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5l4 4 9-9"/></svg>
+          </span>
+          <span class="stat-text">
+            <span class="stat-value" id="stat-completed">0</span>
+            <span class="stat-label">Completed</span>
+          </span>
+        </li>
+        <li class="stat stat-remaining">
+          <span class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4.5v5.8l3.6 2.2"/><circle cx="10" cy="10" r="7"/></svg>
+          </span>
+          <span class="stat-text">
+            <span class="stat-value" id="stat-remaining">0</span>
+            <span class="stat-label">Remaining</span>
+          </span>
+        </li>
+        <li class="stat stat-bad">
+          <span class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6v5"/><path d="M10 14.2v.1"/><path d="M8.6 3.3L1.9 15a1.6 1.6 0 001.4 2.4h13.4A1.6 1.6 0 0018.1 15L11.4 3.3a1.6 1.6 0 00-2.8 0z"/></svg>
+          </span>
+          <span class="stat-text">
+            <span class="stat-value" id="stat-overdue">0</span>
+            <span class="stat-label">Overdue</span>
+          </span>
+        </li>
         <li class="stat stat-accent">
-          <span class="stat-value" id="stat-average">—</span>
-          <span class="stat-label">Average grade <small id="stat-graded-note">(0 graded)</small></span>
+          <span class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14.5l4.2-4.6 3 2.6L17 6.5"/><path d="M3 17h14"/></svg>
+          </span>
+          <span class="stat-text">
+            <span class="stat-value" id="stat-average">&mdash;</span>
+            <span class="stat-label">Average grade
+              <small id="stat-graded-note">0 graded</small></span>
+          </span>
         </li>
       </ul>
-      <div class="progress" role="progressbar" aria-labelledby="progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress">
-        <div class="progress-bar" id="progress-bar"></div>
+      <div class="progress-wrap">
+        <div class="progress" role="progressbar" aria-labelledby="progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <p class="progress-label" id="progress-label">0% of your assignments are complete.</p>
       </div>
-      <p class="progress-label" id="progress-label">0% of your assignments are complete.</p>
     </section>
 
     <div class="layout">

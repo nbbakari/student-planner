@@ -10,6 +10,8 @@ const STORAGE_KEY = 'study-planner-v2';
 const THEME_KEY = 'study-planner-theme';
 const LEGACY_STORAGE_KEY = 'study-planner-v1';
 const PRIORITIES = ['Low', 'Medium', 'High'];
+/* Each course keeps a colour so it can be recognised at a glance in the table. */
+const COURSE_COLORS = ['#5b5bd6', '#0891b2', '#0f9d58', '#c2740b', '#db2777', '#7c3aed', '#0284c7', '#e11d48'];
 const STATUSES = ['Not Started', 'In Progress', 'Completed'];
 
 let state = { courses: [], assignments: [] };
@@ -57,6 +59,29 @@ function formatDate(value) {
 
 function courseById(id) {
   return state.courses.find((course) => course.id === id) || null;
+}
+
+/* Saved colour first; otherwise fall back to the course's position in the list
+   so planners created before colours existed still look right. */
+function courseColor(course) {
+  if (!course) return 'var(--muted)';
+  if (course.color) return course.color;
+  const index = state.courses.findIndex((c) => c.id === course.id);
+  return COURSE_COLORS[(index < 0 ? 0 : index) % COURSE_COLORS.length];
+}
+
+/* 'In Progress' -> 'in-progress', so statuses can be styled by class. */
+function slug(text) {
+  return String(text).toLowerCase().replace(/\s+/g, '-');
+}
+
+/* How close a due date is, used to colour the date cell. */
+function dueClass(item) {
+  if (isOverdue(item)) return 'is-overdue';
+  const due = parseDate(item.dueDate);
+  if (!due || item.status === 'Completed') return '';
+  const days = Math.round((due - new Date().setHours(0, 0, 0, 0)) / 86400000);
+  return days <= 3 ? 'is-soon' : '';
 }
 
 function assignmentById(id) {
@@ -133,12 +158,17 @@ function renderDashboard() {
   $('#stat-remaining').textContent = stats.remaining;
   $('#stat-overdue').textContent = stats.overdue;
   $('#stat-average').textContent = stats.average === null ? '—' : `${stats.average.toFixed(1)}%`;
-  $('#stat-graded-note').textContent =
-    `(${stats.gradedCount} of ${stats.total} graded)`;
+  $('#stat-graded-note').textContent = `${stats.gradedCount} of ${stats.total} graded`;
+
+  const averageCard = $('#stat-average').closest('.stat');
+  averageCard.className = 'stat stat-accent';
+  const band = gradeBand(stats.average);
+  if (band) averageCard.classList.add(`band-${band}`);
 
   $('#progress-bar').style.width = `${stats.completionRate}%`;
   $('#progress').setAttribute('aria-valuenow', String(stats.completionRate));
-  $('#progress-label').textContent = `${stats.completionRate}% of your assignments are complete.`;
+  $('#progress-label').innerHTML =
+    `<strong>${stats.completionRate}%</strong> of your assignments are complete.`;
 }
 
 function renderCourses() {
@@ -162,9 +192,9 @@ function renderCourses() {
     ].filter(Boolean).join(' · ');
 
     return `
-      <li class="course-card${course.id === editingCourseId ? ' editing' : ''}">
+      <li class="course-card${course.id === editingCourseId ? ' editing' : ''}" style="--course-color: ${courseColor(course)}">
         <div>
-          <div class="course-name">${escapeHtml(course.name)}</div>
+          <div class="course-name"><span class="course-dot" aria-hidden="true"></span>${escapeHtml(course.name)}</div>
           <div class="course-meta">${meta}</div>
           <div class="course-summary${cs.overdue ? ' has-overdue' : ''}">${summary}</div>
         </div>
@@ -214,29 +244,40 @@ function renderAssignments() {
       overdue ? 'overdue' : ''
     ].filter(Boolean).join(' ');
 
+    const band = gradeBand(item.grade);
+
     return `
       <tr class="${classes}">
         <td class="assignment-title">
           ${escapeHtml(item.title)}
           ${overdue ? '<span class="tag tag-overdue">Overdue</span>' : ''}
         </td>
-        <td>${escapeHtml(course ? course.name : 'Unassigned')}</td>
-        <td>${formatDate(item.dueDate)}</td>
         <td>
-          <select data-action="set-priority" data-id="${item.id}" aria-label="Priority for ${escapeHtml(item.title)}">
+          <span class="course-chip" style="--course-color: ${courseColor(course)}">
+            ${escapeHtml(course ? course.name : 'Unassigned')}
+          </span>
+        </td>
+        <td class="due-cell ${dueClass(item)}">${formatDate(item.dueDate)}</td>
+        <td>
+          <select class="chip-select prio-${item.priority}" data-action="set-priority" data-id="${item.id}"
+                  aria-label="Priority for ${escapeHtml(item.title)}">
             ${optionList(PRIORITIES, item.priority)}
           </select>
         </td>
         <td>
-          <select data-action="set-status" data-id="${item.id}" aria-label="Status for ${escapeHtml(item.title)}">
+          <select class="chip-select status-${slug(item.status)}" data-action="set-status" data-id="${item.id}"
+                  aria-label="Status for ${escapeHtml(item.title)}">
             ${optionList(STATUSES, item.status)}
           </select>
         </td>
         <td>
-          <input class="grade-input" type="number" min="0" max="100" step="0.1" placeholder="—"
-                 value="${isGraded(item) ? escapeHtml(item.grade) : ''}"
-                 data-action="set-grade" data-id="${item.id}"
-                 aria-label="Grade for ${escapeHtml(item.title)}" />
+          <div class="grade-cell">
+            <input class="grade-input${band ? ` band-${band}` : ''}" type="number" min="0" max="100" step="0.1" placeholder="—"
+                   value="${isGraded(item) ? escapeHtml(item.grade) : ''}"
+                   data-action="set-grade" data-id="${item.id}"
+                   aria-label="Grade for ${escapeHtml(item.title)}" />
+            ${band ? `<span class="grade-letter band-${band}" title="Letter grade">${gradeLetter(item.grade)}</span>` : ''}
+          </div>
         </td>
         <td>
           <div class="row-actions">
@@ -290,7 +331,8 @@ function submitCourse(event) {
   if (editingCourseId) {
     Object.assign(courseById(editingCourseId), details);
   } else {
-    state.courses.push({ id: uid(), ...details });
+    const color = COURSE_COLORS[state.courses.length % COURSE_COLORS.length];
+    state.courses.push({ id: uid(), color, ...details });
   }
 
   saveState();

@@ -56,6 +56,23 @@ function computeStats(assignments, today = new Date()) {
   };
 }
 
+/** Letter band for a percentage: a/b/c/d/f, or null when there is no grade. */
+function gradeBand(value) {
+  if (value === null || value === undefined || value === '' || Number.isNaN(Number(value))) return null;
+  const grade = Number(value);
+  if (grade >= 90) return 'a';
+  if (grade >= 80) return 'b';
+  if (grade >= 70) return 'c';
+  if (grade >= 60) return 'd';
+  return 'f';
+}
+
+/** The same thing as a display letter: A, B, C, D, F or '' when ungraded. */
+function gradeLetter(value) {
+  const band = gradeBand(value);
+  return band ? band.toUpperCase() : '';
+}
+
 /** The same summary, narrowed to a single course. */
 function computeCourseStats(assignments, courseId, today = new Date()) {
   return computeStats(assignments.filter((a) => a.courseId === courseId), today);
@@ -63,5 +80,5 @@ function computeCourseStats(assignments, courseId, today = new Date()) {
 
 /* Available to Node for tests; harmless in the browser. */
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { parseDate, isGraded, isOverdue, computeStats, computeCourseStats };
+  module.exports = { parseDate, isGraded, isOverdue, computeStats, computeCourseStats, gradeBand, gradeLetter };
 }

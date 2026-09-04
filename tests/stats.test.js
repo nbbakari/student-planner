@@ -2,7 +2,7 @@
    Run with:  node tests/stats.test.js                                */
 
 const assert = require('node:assert/strict');
-const { computeStats, isOverdue, isGraded } = require('../stats.js');
+const { computeStats, isOverdue, isGraded, gradeBand, gradeLetter } = require('../stats.js');
 
 const today = new Date(2026, 8, 4); // 4 Sept 2026 — fixed so the test never drifts
 const past = '2026-09-01';
@@ -41,5 +41,18 @@ assert.equal(isGraded({ grade: '' }), false, 'an empty grade box is not a grade'
 assert.equal(isOverdue({ status: 'Completed', dueDate: past }, today), false, 'finished work is never overdue');
 assert.equal(isOverdue({ status: 'Not Started', dueDate: '' }, today), false, 'no due date → never overdue');
 console.log('  ok  edge cases (empty list, zero grade, blank grade, completed past-due, undated)');
+
+// Grade bands drive the colour coding in the table and on the average card.
+assert.equal(gradeLetter(95), 'A');
+assert.equal(gradeLetter(90), 'A');   // boundaries belong to the higher band
+assert.equal(gradeLetter(89.9), 'B');
+assert.equal(gradeLetter(80), 'B');
+assert.equal(gradeLetter(70), 'C');
+assert.equal(gradeLetter(60), 'D');
+assert.equal(gradeLetter(59.9), 'F');
+assert.equal(gradeLetter(0), 'F');
+assert.equal(gradeBand(null), null, 'ungraded work has no colour band');
+assert.equal(gradeLetter(''), '', 'an empty grade box shows no letter');
+console.log('  ok  grade bands (A/B/C/D/F, boundaries, ungraded)');
 
 console.log('\nAll dashboard checks passed.');

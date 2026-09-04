@@ -11,7 +11,7 @@ Built with Visual Studio Code + GitHub Copilot, versioned with Git/GitHub, deplo
 
 | Tool | Minimum version | Used for | Check with |
 |---|---|---|---|
-| A modern browser | Chrome 90+ / Edge 90+ / Firefox 88+ / Safari 15+ | Running the app (needs `localStorage`) | `chrome://version` |
+| A modern browser | Chrome 100+ / Edge 100+ / Firefox 100+ / Safari 15.4+ | Running the app (needs `localStorage` and CSS custom properties) | `chrome://version` |
 | Git | 2.30+ (built with **2.43.0**) | Version control, tags | `git --version` |
 | Visual Studio Code | 1.85+ | Development environment | Help → About |
 | GitHub account | — | Remote repository + GitHub Pages | github.com |
@@ -106,7 +106,8 @@ Everything from v1, plus:
 | Addition | Detail |
 |---|---|
 | **Grades** | Optional 0–100 grade per assignment, editable inline in the table or in the form |
-| **Dashboard** | Total, Completed, Remaining, Overdue and Average grade cards + a completion bar |
+| **Dashboard** | Total, Completed, Remaining, Overdue and Average grade cards, each with its own icon and colour, + a completion bar |
+| **Colour coding** | Priority chips (High red / Medium amber / Low green), status chips (Not Started grey / In Progress blue / Completed green), grade bands with an A–F badge (A green, B blue, C amber, D orange, F red), a colour per course, and due dates that turn amber within 3 days and red once overdue |
 | **Overdue detection** | Due date earlier than today **and** status is not Completed |
 | **Graded-only average** | Ungraded work is skipped, never counted as zero; shows `—` when nothing is graded |
 | **Per-course progress** | Each course card shows `x/y done · avg n% · n overdue` |
@@ -270,4 +271,5 @@ Re-run `node tests/stats.test.js` after any Copilot edit to `stats.js`.
 | Tags missing on GitHub | Tags need their own push: `git push origin --tags`. |
 | `git push` rejected | The GitHub repo was created with a README. Run `git pull --rebase origin main` first. |
 | Overdue count looks wrong | Overdue means past due **and** not Completed; finishing late clears it. |
+| Priority/status chips look plain | An old browser without `appearance: none` support on `<select>`; the app still works, only the pill shape is lost. |
 | Copilot not suggesting | Check the status-bar icon is not muted, and that you are signed in to GitHub in VS Code. |
