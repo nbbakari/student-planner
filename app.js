@@ -1,13 +1,13 @@
 /* ------------------------------------------------------------------
-   Student Study Planner & Grade Dashboard — Version 1
-   Core features:
-     - add / edit / delete courses
-     - add / edit / delete assignments
-     - change priority and status
-     - everything persists in localStorage across refreshes
+   Student Study Planner & Grade Dashboard — Version 2
+
+   Version 1 features (courses, assignments, priority, status, storage)
+   plus grades and a live dashboard summary.
+   Calculations live in stats.js so they can be unit-tested.
    ------------------------------------------------------------------ */
 
-const STORAGE_KEY = 'study-planner-v1';
+const STORAGE_KEY = 'study-planner-v2';
+const LEGACY_STORAGE_KEY = 'study-planner-v1';
 const PRIORITIES = ['Low', 'Medium', 'High'];
 const STATUSES = ['Not Started', 'In Progress', 'Completed'];
 
@@ -22,11 +22,13 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 
 function loadState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    // Version 2 keeps its own key, but a version 1 planner is upgraded in place.
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!raw) return;
     const parsed = JSON.parse(raw);
     state.courses = Array.isArray(parsed.courses) ? parsed.courses : [];
-    state.assignments = Array.isArray(parsed.assignments) ? parsed.assignments : [];
+    state.assignments = (Array.isArray(parsed.assignments) ? parsed.assignments : [])
+      .map((a) => ({ grade: null, ...a })); // v1 records had no grade field
   } catch (err) {
     console.error('Saved data could not be read, starting fresh.', err);
     state = { courses: [], assignments: [] };
@@ -43,13 +45,6 @@ function saveState() {
 
 /* ---------------- helpers ---------------- */
 
-function parseDate(value) {
-  if (!value) return null;
-  const [y, m, d] = value.split('-').map(Number);
-  if (!y || !m || !d) return null;
-  return new Date(y, m - 1, d);
-}
-
 function formatDate(value) {
   const date = parseDate(value);
   if (!date) return '—';
@@ -58,6 +53,10 @@ function formatDate(value) {
 
 function courseById(id) {
   return state.courses.find((course) => course.id === id) || null;
+}
+
+function assignmentById(id) {
+  return state.assignments.find((item) => item.id === id) || null;
 }
 
 function sortedAssignments() {
@@ -85,9 +84,26 @@ function escapeHtml(text) {
 /* ---------------- rendering ---------------- */
 
 function render() {
+  renderDashboard();
   renderCourses();
   renderCourseOptions();
   renderAssignments();
+}
+
+function renderDashboard() {
+  const stats = computeStats(state.assignments);
+
+  $('#stat-total').textContent = stats.total;
+  $('#stat-completed').textContent = stats.completed;
+  $('#stat-remaining').textContent = stats.remaining;
+  $('#stat-overdue').textContent = stats.overdue;
+  $('#stat-average').textContent = stats.average === null ? '—' : `${stats.average.toFixed(1)}%`;
+  $('#stat-graded-note').textContent =
+    `(${stats.gradedCount} of ${stats.total} graded)`;
+
+  $('#progress-bar').style.width = `${stats.completionRate}%`;
+  $('#progress').setAttribute('aria-valuenow', String(stats.completionRate));
+  $('#progress-label').textContent = `${stats.completionRate}% of your assignments are complete.`;
 }
 
 function renderCourses() {
@@ -137,14 +153,19 @@ function renderAssignments() {
 
   list.innerHTML = rows.map((item) => {
     const course = courseById(item.courseId);
+    const overdue = isOverdue(item);
     const classes = [
       item.id === editingAssignmentId ? 'editing' : '',
-      item.status === 'Completed' ? 'done' : ''
+      item.status === 'Completed' ? 'done' : '',
+      overdue ? 'overdue' : ''
     ].filter(Boolean).join(' ');
 
     return `
       <tr class="${classes}">
-        <td class="assignment-title">${escapeHtml(item.title)}</td>
+        <td class="assignment-title">
+          ${escapeHtml(item.title)}
+          ${overdue ? '<span class="tag tag-overdue">Overdue</span>' : ''}
+        </td>
         <td>${escapeHtml(course ? course.name : 'Unassigned')}</td>
         <td>${formatDate(item.dueDate)}</td>
         <td>
@@ -156,6 +177,12 @@ function renderAssignments() {
           <select data-action="set-status" data-id="${item.id}" aria-label="Status for ${escapeHtml(item.title)}">
             ${optionList(STATUSES, item.status)}
           </select>
+        </td>
+        <td>
+          <input class="grade-input" type="number" min="0" max="100" step="0.1" placeholder="—"
+                 value="${isGraded(item) ? escapeHtml(item.grade) : ''}"
+                 data-action="set-grade" data-id="${item.id}"
+                 aria-label="Grade for ${escapeHtml(item.title)}" />
         </td>
         <td>
           <div class="row-actions">
@@ -207,8 +234,7 @@ function submitCourse(event) {
   };
 
   if (editingCourseId) {
-    const course = courseById(editingCourseId);
-    Object.assign(course, details);
+    Object.assign(courseById(editingCourseId), details);
   } else {
     state.courses.push({ id: uid(), ...details });
   }
@@ -247,7 +273,7 @@ function resetAssignmentForm() {
 }
 
 function startAssignmentEdit(id) {
-  const item = state.assignments.find((a) => a.id === id);
+  const item = assignmentById(id);
   if (!item) return;
   editingAssignmentId = id;
   $('#assignment-title').value = item.title;
@@ -255,10 +281,20 @@ function startAssignmentEdit(id) {
   $('#assignment-due').value = item.dueDate || '';
   $('#assignment-priority').value = item.priority;
   $('#assignment-status').value = item.status;
+  $('#assignment-grade').value = isGraded(item) ? item.grade : '';
   $('#assignment-submit').textContent = 'Save changes';
   $('#assignment-cancel').hidden = false;
   $('#assignment-title').focus();
   renderAssignments();
+}
+
+/** '' means "not graded yet"; anything numeric is clamped to 0-100. */
+function readGrade(value) {
+  const trimmed = String(value ?? '').trim();
+  if (trimmed === '') return null;
+  const number = Number(trimmed);
+  if (Number.isNaN(number)) return null;
+  return Math.min(100, Math.max(0, number));
 }
 
 function submitAssignment(event) {
@@ -280,12 +316,12 @@ function submitAssignment(event) {
     courseId,
     dueDate: $('#assignment-due').value,
     priority: $('#assignment-priority').value,
-    status: $('#assignment-status').value
+    status: $('#assignment-status').value,
+    grade: readGrade($('#assignment-grade').value)
   };
 
   if (editingAssignmentId) {
-    const item = state.assignments.find((a) => a.id === editingAssignmentId);
-    Object.assign(item, details);
+    Object.assign(assignmentById(editingAssignmentId), details);
   } else {
     state.assignments.push({ id: uid(), ...details });
   }
@@ -296,7 +332,7 @@ function submitAssignment(event) {
 }
 
 function deleteAssignment(id) {
-  const item = state.assignments.find((a) => a.id === id);
+  const item = assignmentById(id);
   if (!item || !confirm(`Delete "${item.title}"?`)) return;
   state.assignments = state.assignments.filter((a) => a.id !== id);
   if (editingAssignmentId === id) resetAssignmentForm();
@@ -318,14 +354,15 @@ function handleClick(event) {
 }
 
 function handleChange(event) {
-  const select = event.target.closest('select[data-action]');
-  if (!select) return;
-  const { action, id } = select.dataset;
-  const item = state.assignments.find((a) => a.id === id);
+  const control = event.target.closest('[data-action]');
+  if (!control) return;
+  const { action, id } = control.dataset;
+  const item = assignmentById(id);
   if (!item) return;
 
-  if (action === 'set-priority') item.priority = select.value;
-  if (action === 'set-status') item.status = select.value;
+  if (action === 'set-priority') item.priority = control.value;
+  if (action === 'set-status') item.status = control.value;
+  if (action === 'set-grade') item.grade = readGrade(control.value);
 
   saveState();
   render();

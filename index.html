@@ -10,119 +10,146 @@
   <header class="site-header">
     <div class="wrap header-inner">
       <div>
-        <h1>Student Study Planner</h1>
-        <p class="tagline">Track your courses, assignments, priorities and progress.</p>
+        <h1>Student Study Planner &amp; Grade Dashboard</h1>
+        <p class="tagline">Track your courses, assignments, priorities, progress and grades.</p>
       </div>
-      <span class="version-badge">v1.0</span>
+      <span class="version-badge">v2.0</span>
     </div>
   </header>
 
-  <main class="wrap layout">
-    <!-- ---------------- Courses ---------------- -->
-    <section class="panel" aria-labelledby="courses-heading">
-      <h2 id="courses-heading">Courses</h2>
-
-      <form id="course-form" class="form" novalidate>
-        <div class="field">
-          <label for="course-name">Course name <span aria-hidden="true">*</span></label>
-          <input id="course-name" type="text" placeholder="Introduction to Databases" autocomplete="off" />
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="course-code">Course code</label>
-            <input id="course-code" type="text" placeholder="CS 204" autocomplete="off" />
-          </div>
-          <div class="field">
-            <label for="course-credits">Credits</label>
-            <input id="course-credits" type="number" min="0" max="30" step="1" placeholder="3" />
-          </div>
-        </div>
-        <div class="field">
-          <label for="course-instructor">Instructor</label>
-          <input id="course-instructor" type="text" placeholder="Dr. Mugisha" autocomplete="off" />
-        </div>
-
-        <p class="error" id="course-error" role="alert"></p>
-
-        <div class="form-actions">
-          <button type="submit" class="btn primary" id="course-submit">Add course</button>
-          <button type="button" class="btn ghost" id="course-cancel" hidden>Cancel</button>
-        </div>
-      </form>
-
-      <ul id="course-list" class="card-list"></ul>
-      <p class="empty" id="course-empty">No courses yet. Add your first course above.</p>
-    </section>
-
-    <!-- ---------------- Assignments ---------------- -->
-    <section class="panel" aria-labelledby="assignments-heading">
-      <h2 id="assignments-heading">Assignments</h2>
-
-      <form id="assignment-form" class="form" novalidate>
-        <div class="field">
-          <label for="assignment-title">Title <span aria-hidden="true">*</span></label>
-          <input id="assignment-title" type="text" placeholder="Lab 3 — SQL joins" autocomplete="off" />
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="assignment-course">Course <span aria-hidden="true">*</span></label>
-            <select id="assignment-course"></select>
-          </div>
-          <div class="field">
-            <label for="assignment-due">Due date</label>
-            <input id="assignment-due" type="date" />
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="assignment-priority">Priority</label>
-            <select id="assignment-priority">
-              <option>Low</option>
-              <option selected>Medium</option>
-              <option>High</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="assignment-status">Status</label>
-            <select id="assignment-status">
-              <option selected>Not Started</option>
-              <option>In Progress</option>
-              <option>Completed</option>
-            </select>
-          </div>
-        </div>
-
-        <p class="error" id="assignment-error" role="alert"></p>
-
-        <div class="form-actions">
-          <button type="submit" class="btn primary" id="assignment-submit">Add assignment</button>
-          <button type="button" class="btn ghost" id="assignment-cancel" hidden>Cancel</button>
-        </div>
-      </form>
-
-      <div class="table-scroll">
-        <table class="table" id="assignment-table">
-          <thead>
-            <tr>
-              <th scope="col">Assignment</th>
-              <th scope="col">Course</th>
-              <th scope="col">Due</th>
-              <th scope="col">Priority</th>
-              <th scope="col">Status</th>
-              <th scope="col"><span class="sr-only">Actions</span></th>
-            </tr>
-          </thead>
-          <tbody id="assignment-list"></tbody>
-        </table>
+  <main class="wrap">
+    <!-- ---------------- Dashboard ---------------- -->
+    <section class="dashboard" aria-labelledby="dashboard-heading">
+      <h2 id="dashboard-heading" class="sr-only">Dashboard summary</h2>
+      <ul class="stat-grid">
+        <li class="stat"><span class="stat-value" id="stat-total">0</span><span class="stat-label">Total</span></li>
+        <li class="stat stat-good"><span class="stat-value" id="stat-completed">0</span><span class="stat-label">Completed</span></li>
+        <li class="stat"><span class="stat-value" id="stat-remaining">0</span><span class="stat-label">Remaining</span></li>
+        <li class="stat stat-bad"><span class="stat-value" id="stat-overdue">0</span><span class="stat-label">Overdue</span></li>
+        <li class="stat stat-accent">
+          <span class="stat-value" id="stat-average">—</span>
+          <span class="stat-label">Average grade <small id="stat-graded-note">(0 graded)</small></span>
+        </li>
+      </ul>
+      <div class="progress" role="progressbar" aria-labelledby="progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress">
+        <div class="progress-bar" id="progress-bar"></div>
       </div>
-      <p class="empty" id="assignment-empty">No assignments yet. Add a course first, then plan your work.</p>
+      <p class="progress-label" id="progress-label">0% of your assignments are complete.</p>
     </section>
+
+    <div class="layout">
+      <!-- ---------------- Courses ---------------- -->
+      <section class="panel" aria-labelledby="courses-heading">
+        <h2 id="courses-heading">Courses</h2>
+
+        <form id="course-form" class="form" novalidate>
+          <div class="field">
+            <label for="course-name">Course name <span aria-hidden="true">*</span></label>
+            <input id="course-name" type="text" placeholder="Introduction to Databases" autocomplete="off" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="course-code">Course code</label>
+              <input id="course-code" type="text" placeholder="CS 204" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="course-credits">Credits</label>
+              <input id="course-credits" type="number" min="0" max="30" step="1" placeholder="3" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="course-instructor">Instructor</label>
+            <input id="course-instructor" type="text" placeholder="Dr. Mugisha" autocomplete="off" />
+          </div>
+
+          <p class="error" id="course-error" role="alert"></p>
+
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="course-submit">Add course</button>
+            <button type="button" class="btn ghost" id="course-cancel" hidden>Cancel</button>
+          </div>
+        </form>
+
+        <ul id="course-list" class="card-list"></ul>
+        <p class="empty" id="course-empty">No courses yet. Add your first course above.</p>
+      </section>
+
+      <!-- ---------------- Assignments ---------------- -->
+      <section class="panel" aria-labelledby="assignments-heading">
+        <h2 id="assignments-heading">Assignments</h2>
+
+        <form id="assignment-form" class="form" novalidate>
+          <div class="field">
+            <label for="assignment-title">Title <span aria-hidden="true">*</span></label>
+            <input id="assignment-title" type="text" placeholder="Lab 3 — SQL joins" autocomplete="off" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="assignment-course">Course <span aria-hidden="true">*</span></label>
+              <select id="assignment-course"></select>
+            </div>
+            <div class="field">
+              <label for="assignment-due">Due date</label>
+              <input id="assignment-due" type="date" />
+            </div>
+          </div>
+          <div class="field-row three">
+            <div class="field">
+              <label for="assignment-priority">Priority</label>
+              <select id="assignment-priority">
+                <option>Low</option>
+                <option selected>Medium</option>
+                <option>High</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="assignment-status">Status</label>
+              <select id="assignment-status">
+                <option selected>Not Started</option>
+                <option>In Progress</option>
+                <option>Completed</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="assignment-grade">Grade %</label>
+              <input id="assignment-grade" type="number" min="0" max="100" step="0.1" placeholder="—" />
+            </div>
+          </div>
+
+          <p class="error" id="assignment-error" role="alert"></p>
+
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="assignment-submit">Add assignment</button>
+            <button type="button" class="btn ghost" id="assignment-cancel" hidden>Cancel</button>
+          </div>
+        </form>
+
+        <div class="table-scroll">
+          <table class="table" id="assignment-table">
+            <thead>
+              <tr>
+                <th scope="col">Assignment</th>
+                <th scope="col">Course</th>
+                <th scope="col">Due</th>
+                <th scope="col">Priority</th>
+                <th scope="col">Status</th>
+                <th scope="col">Grade %</th>
+                <th scope="col"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="assignment-list"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="assignment-empty">No assignments yet. Add a course first, then plan your work.</p>
+      </section>
+    </div>
   </main>
 
   <footer class="wrap site-footer">
     <p>Data is saved in your browser with <code>localStorage</code> — it stays after a refresh.</p>
   </footer>
 
+  <script src="stats.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -139,3 +139,53 @@ input:focus, select:focus, button:focus-visible {
 .pill-Low { color: var(--low); }
 
 .site-footer { color: var(--muted); font-size: .85rem; padding-bottom: 2rem; }
+
+/* ---------- version 2: dashboard ---------- */
+.dashboard { padding: 1.75rem 0 .5rem; }
+
+.stat-grid {
+  list-style: none; margin: 0 0 1rem; padding: 0;
+  display: grid; gap: .75rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--muted);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: .85rem 1rem;
+  display: grid; gap: .15rem;
+}
+.stat-value { font-size: 1.7rem; font-weight: 700; line-height: 1.1; letter-spacing: -.02em; }
+.stat-label { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+.stat-label small { text-transform: none; letter-spacing: 0; }
+.stat-good { border-top-color: var(--low); }
+.stat-good .stat-value { color: var(--low); }
+.stat-bad { border-top-color: var(--danger); }
+.stat-bad .stat-value { color: var(--danger); }
+.stat-accent { border-top-color: var(--accent); }
+.stat-accent .stat-value { color: var(--accent); }
+
+.progress {
+  height: 8px; border-radius: 999px;
+  background: var(--border); overflow: hidden;
+}
+.progress-bar {
+  height: 100%; width: 0;
+  background: var(--accent);
+  transition: width .25s ease;
+}
+.progress-label { color: var(--muted); font-size: .82rem; margin: .4rem 0 0; }
+
+/* ---------- version 2: grades and overdue ---------- */
+.field-row.three { grid-template-columns: repeat(3, 1fr); }
+.grade-input { width: 5.5rem; padding: .3rem .4rem; font-size: .85rem; }
+
+.tag {
+  display: inline-block; margin-left: .4rem;
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  padding: .1rem .4rem; border-radius: 999px;
+}
+.tag-overdue { background: var(--danger-soft); color: var(--danger); }
+tr.overdue td { background: color-mix(in srgb, var(--danger-soft) 45%, transparent); }
