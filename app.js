@@ -7,6 +7,7 @@
    ------------------------------------------------------------------ */
 
 const STORAGE_KEY = 'study-planner-v2';
+const THEME_KEY = 'study-planner-theme';
 const LEGACY_STORAGE_KEY = 'study-planner-v1';
 const PRIORITIES = ['Low', 'Medium', 'High'];
 const STATUSES = ['Not Started', 'In Progress', 'Completed'];
@@ -393,6 +394,78 @@ function deleteAssignment(id) {
   render();
 }
 
+/* ---------------- theme ---------------- */
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const button = $('#theme-toggle');
+  button.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+  button.setAttribute('aria-pressed', String(theme === 'dark'));
+}
+
+/* A saved choice wins; otherwise follow the operating system. */
+function preferredTheme() {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === 'dark' || saved === 'light') return saved;
+  } catch (err) {
+    // storage may be blocked; fall through to the system preference
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem(THEME_KEY, next); } catch (err) { /* not fatal */ }
+  applyTheme(next);
+}
+
+/* ---------------- backup and restore ---------------- */
+
+function exportData() {
+  const payload = JSON.stringify({ app: 'study-planner', version: 2, exportedAt: new Date().toISOString(), ...state }, null, 2);
+  const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `study-planner-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  event.target.value = ''; // so the same file can be picked again later
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!Array.isArray(parsed.courses) || !Array.isArray(parsed.assignments)) {
+        throw new Error('the file has no courses/assignments lists');
+      }
+      const message = `Replace the current planner with ${parsed.courses.length} course(s) `
+        + `and ${parsed.assignments.length} assignment(s)? This cannot be undone.`;
+      if (!confirm(message)) return;
+
+      state = {
+        courses: parsed.courses,
+        assignments: parsed.assignments.map((a) => ({ grade: null, ...a }))
+      };
+      resetCourseForm();
+      resetAssignmentForm();
+      saveState();
+      render();
+    } catch (err) {
+      alert(`That file could not be imported — ${err.message}.`);
+    }
+  };
+  reader.onerror = () => alert('That file could not be read.');
+  reader.readAsText(file);
+}
+
 /* ---------------- events ---------------- */
 
 function handleClick(event) {
@@ -423,6 +496,7 @@ function handleChange(event) {
 
 function init() {
   loadState();
+  applyTheme(preferredTheme());
   render();
 
   $('#course-form').addEventListener('submit', submitCourse);
@@ -442,6 +516,11 @@ function init() {
     renderFilterOptions();
     renderAssignments();
   });
+
+  $('#theme-toggle').addEventListener('click', toggleTheme);
+  $('#export-btn').addEventListener('click', exportData);
+  $('#import-btn').addEventListener('click', () => $('#import-input').click());
+  $('#import-input').addEventListener('change', importData);
 
   document.addEventListener('click', handleClick);
   document.addEventListener('change', handleChange);

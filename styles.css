@@ -204,3 +204,25 @@ tr.overdue td { background: color-mix(in srgb, var(--danger-soft) 45%, transpare
 
 .course-summary { font-size: .8rem; color: var(--accent); font-weight: 600; margin-top: .15rem; }
 .course-summary.has-overdue { color: var(--danger); }
+
+/* ---------- version 2: dark mode ---------- */
+:root[data-theme="dark"] {
+  --bg: #12151f;
+  --surface: #1b1f2d;
+  --border: #2c3244;
+  --text: #e8eaf2;
+  --muted: #9aa2b8;
+  --accent: #8ea2ff;
+  --accent-soft: #262d47;
+  --danger: #ff8a80;
+  --danger-soft: #3a2226;
+  --high: #ff8a80;
+  --medium: #f2b866;
+  --low: #6fd39a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+}
+:root[data-theme="dark"] .btn.primary { color: #12151f; }
+:root[data-theme="dark"] input[type="date"] { color-scheme: dark; }
+
+.header-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.header-actions .btn { font-size: .82rem; padding: .35rem .7rem; }
