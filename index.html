@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Study Planner &amp; Grade Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div>
+        <h1>Student Study Planner</h1>
+        <p class="tagline">Track your courses, assignments, priorities and progress.</p>
+      </div>
+      <span class="version-badge">v1.0</span>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <!-- ---------------- Courses ---------------- -->
+    <section class="panel" aria-labelledby="courses-heading">
+      <h2 id="courses-heading">Courses</h2>
+
+      <form id="course-form" class="form" novalidate>
+        <div class="field">
+          <label for="course-name">Course name <span aria-hidden="true">*</span></label>
+          <input id="course-name" type="text" placeholder="Introduction to Databases" autocomplete="off" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="course-code">Course code</label>
+            <input id="course-code" type="text" placeholder="CS 204" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="course-credits">Credits</label>
+            <input id="course-credits" type="number" min="0" max="30" step="1" placeholder="3" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="course-instructor">Instructor</label>
+          <input id="course-instructor" type="text" placeholder="Dr. Mugisha" autocomplete="off" />
+        </div>
+
+        <p class="error" id="course-error" role="alert"></p>
+
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="course-submit">Add course</button>
+          <button type="button" class="btn ghost" id="course-cancel" hidden>Cancel</button>
+        </div>
+      </form>
+
+      <ul id="course-list" class="card-list"></ul>
+      <p class="empty" id="course-empty">No courses yet. Add your first course above.</p>
+    </section>
+
+    <!-- ---------------- Assignments ---------------- -->
+    <section class="panel" aria-labelledby="assignments-heading">
+      <h2 id="assignments-heading">Assignments</h2>
+
+      <form id="assignment-form" class="form" novalidate>
+        <div class="field">
+          <label for="assignment-title">Title <span aria-hidden="true">*</span></label>
+          <input id="assignment-title" type="text" placeholder="Lab 3 — SQL joins" autocomplete="off" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="assignment-course">Course <span aria-hidden="true">*</span></label>
+            <select id="assignment-course"></select>
+          </div>
+          <div class="field">
+            <label for="assignment-due">Due date</label>
+            <input id="assignment-due" type="date" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="assignment-priority">Priority</label>
+            <select id="assignment-priority">
+              <option>Low</option>
+              <option selected>Medium</option>
+              <option>High</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="assignment-status">Status</label>
+            <select id="assignment-status">
+              <option selected>Not Started</option>
+              <option>In Progress</option>
+              <option>Completed</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="error" id="assignment-error" role="alert"></p>
+
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="assignment-submit">Add assignment</button>
+          <button type="button" class="btn ghost" id="assignment-cancel" hidden>Cancel</button>
+        </div>
+      </form>
+
+      <div class="table-scroll">
+        <table class="table" id="assignment-table">
+          <thead>
+            <tr>
+              <th scope="col">Assignment</th>
+              <th scope="col">Course</th>
+              <th scope="col">Due</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Status</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="assignment-list"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="assignment-empty">No assignments yet. Add a course first, then plan your work.</p>
+    </section>
+  </main>
+
+  <footer class="wrap site-footer">
+    <p>Data is saved in your browser with <code>localStorage</code> — it stays after a refresh.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
