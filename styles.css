@@ -189,3 +189,18 @@ input:focus, select:focus, button:focus-visible {
 }
 .tag-overdue { background: var(--danger-soft); color: var(--danger); }
 tr.overdue td { background: color-mix(in srgb, var(--danger-soft) 45%, transparent); }
+
+/* ---------- version 2: search, filters, per-course progress ---------- */
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: .6rem; align-items: flex-end;
+  padding: .75rem; margin-bottom: .9rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.toolbar .field { min-width: 8.5rem; }
+.toolbar .field.grow { flex: 1 1 12rem; }
+.toolbar select, .toolbar input { font-size: .85rem; padding: .35rem .45rem; }
+
+.course-summary { font-size: .8rem; color: var(--accent); font-weight: 600; margin-top: .15rem; }
+.course-summary.has-overdue { color: var(--danger); }

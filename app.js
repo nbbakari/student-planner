@@ -15,6 +15,9 @@ let state = { courses: [], assignments: [] };
 let editingCourseId = null;
 let editingAssignmentId = null;
 
+/* Which assignments the table shows, and in what order. */
+let filters = { search: '', courseId: 'all', status: 'all', sort: 'due-asc' };
+
 const $ = (selector) => document.querySelector(selector);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
@@ -59,13 +62,43 @@ function assignmentById(id) {
   return state.assignments.find((item) => item.id === id) || null;
 }
 
-function sortedAssignments() {
-  return [...state.assignments].sort((a, b) => {
-    if (!a.dueDate && !b.dueDate) return a.title.localeCompare(b.title);
-    if (!a.dueDate) return 1;
-    if (!b.dueDate) return -1;
-    return a.dueDate.localeCompare(b.dueDate);
-  });
+/* Undated work always sinks to the bottom, whichever direction we sort. */
+function compareDue(a, b) {
+  if (!a.dueDate && !b.dueDate) return a.title.localeCompare(b.title);
+  if (!a.dueDate) return 1;
+  if (!b.dueDate) return -1;
+  return a.dueDate.localeCompare(b.dueDate);
+}
+
+const SORTS = {
+  'due-asc': (a, b) => compareDue(a, b),
+  'due-desc': (a, b) => (!a.dueDate || !b.dueDate) ? compareDue(a, b) : compareDue(b, a),
+  'priority': (a, b) => PRIORITIES.indexOf(b.priority) - PRIORITIES.indexOf(a.priority) || compareDue(a, b),
+  'grade-desc': (a, b) => (isGraded(b) ? Number(b.grade) : -1) - (isGraded(a) ? Number(a.grade) : -1),
+  'title': (a, b) => a.title.localeCompare(b.title)
+};
+
+function matchesFilters(item) {
+  if (filters.courseId !== 'all' && item.courseId !== filters.courseId) return false;
+
+  if (filters.status === 'overdue') {
+    if (!isOverdue(item)) return false;
+  } else if (filters.status !== 'all' && item.status !== filters.status) {
+    return false;
+  }
+
+  const term = filters.search.trim().toLowerCase();
+  if (term) {
+    const course = courseById(item.courseId);
+    const haystack = `${item.title} ${course ? course.name : ''} ${course ? course.code || '' : ''}`.toLowerCase();
+    if (!haystack.includes(term)) return false;
+  }
+  return true;
+}
+
+function visibleAssignments() {
+  const sorter = SORTS[filters.sort] || SORTS['due-asc'];
+  return state.assignments.filter(matchesFilters).sort(sorter);
 }
 
 function optionList(values, selected) {
@@ -87,6 +120,7 @@ function render() {
   renderDashboard();
   renderCourses();
   renderCourseOptions();
+  renderFilterOptions();
   renderAssignments();
 }
 
@@ -112,19 +146,26 @@ function renderCourses() {
 
   empty.hidden = state.courses.length > 0;
   list.innerHTML = state.courses.map((course) => {
-    const count = state.assignments.filter((a) => a.courseId === course.id).length;
     const meta = [
       course.code,
       course.instructor,
-      course.credits ? `${course.credits} credits` : '',
-      `${count} assignment${count === 1 ? '' : 's'}`
+      course.credits ? `${course.credits} credits` : ''
     ].filter(Boolean).map(escapeHtml).join(' · ');
+
+    // Progress and average for this course alone.
+    const cs = computeCourseStats(state.assignments, course.id);
+    const summary = [
+      `${cs.completed}/${cs.total} done`,
+      cs.average === null ? 'no grades yet' : `avg ${cs.average.toFixed(1)}%`,
+      cs.overdue ? `${cs.overdue} overdue` : ''
+    ].filter(Boolean).join(' · ');
 
     return `
       <li class="course-card${course.id === editingCourseId ? ' editing' : ''}">
         <div>
           <div class="course-name">${escapeHtml(course.name)}</div>
           <div class="course-meta">${meta}</div>
+          <div class="course-summary${cs.overdue ? ' has-overdue' : ''}">${summary}</div>
         </div>
         <div class="card-actions">
           <button class="btn small ghost" data-action="edit-course" data-id="${course.id}">Edit</button>
@@ -132,6 +173,15 @@ function renderCourses() {
         </div>
       </li>`;
   }).join('');
+}
+
+function renderFilterOptions() {
+  const select = $('#filter-course');
+  select.innerHTML = '<option value="all">All courses</option>' +
+    state.courses.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+  // A filter pointing at a deleted course falls back to "all".
+  if (filters.courseId !== 'all' && !courseById(filters.courseId)) filters.courseId = 'all';
+  select.value = filters.courseId;
 }
 
 function renderCourseOptions() {
@@ -146,9 +196,12 @@ function renderCourseOptions() {
 function renderAssignments() {
   const list = $('#assignment-list');
   const empty = $('#assignment-empty');
-  const rows = sortedAssignments();
+  const rows = visibleAssignments();
 
   empty.hidden = rows.length > 0;
+  empty.textContent = state.assignments.length === 0
+    ? 'No assignments yet. Add a course first, then plan your work.'
+    : 'No assignments match the current search or filters.';
   $('#assignment-table').hidden = rows.length === 0;
 
   list.innerHTML = rows.map((item) => {
@@ -376,6 +429,19 @@ function init() {
   $('#course-cancel').addEventListener('click', () => { resetCourseForm(); renderCourses(); });
   $('#assignment-form').addEventListener('submit', submitAssignment);
   $('#assignment-cancel').addEventListener('click', () => { resetAssignmentForm(); renderAssignments(); });
+
+  $('#filter-search').addEventListener('input', (e) => { filters.search = e.target.value; renderAssignments(); });
+  $('#filter-course').addEventListener('change', (e) => { filters.courseId = e.target.value; renderAssignments(); });
+  $('#filter-status').addEventListener('change', (e) => { filters.status = e.target.value; renderAssignments(); });
+  $('#filter-sort').addEventListener('change', (e) => { filters.sort = e.target.value; renderAssignments(); });
+  $('#filter-clear').addEventListener('click', () => {
+    filters = { search: '', courseId: 'all', status: 'all', sort: 'due-asc' };
+    $('#filter-search').value = '';
+    $('#filter-status').value = 'all';
+    $('#filter-sort').value = 'due-asc';
+    renderFilterOptions();
+    renderAssignments();
+  });
 
   document.addEventListener('click', handleClick);
   document.addEventListener('change', handleChange);

@@ -124,6 +124,38 @@
           </div>
         </form>
 
+        <div class="toolbar" role="search">
+          <div class="field grow">
+            <label for="filter-search">Search</label>
+            <input id="filter-search" type="search" placeholder="Search title or course…" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="filter-course">Course</label>
+            <select id="filter-course"></select>
+          </div>
+          <div class="field">
+            <label for="filter-status">Status</label>
+            <select id="filter-status">
+              <option value="all">All statuses</option>
+              <option value="Not Started">Not Started</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="overdue">Overdue only</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="filter-sort">Sort by</label>
+            <select id="filter-sort">
+              <option value="due-asc">Due date (soonest)</option>
+              <option value="due-desc">Due date (latest)</option>
+              <option value="priority">Priority (high first)</option>
+              <option value="grade-desc">Grade (high first)</option>
+              <option value="title">Title (A-Z)</option>
+            </select>
+          </div>
+          <button type="button" class="btn ghost" id="filter-clear">Clear</button>
+        </div>
+
         <div class="table-scroll">
           <table class="table" id="assignment-table">
             <thead>

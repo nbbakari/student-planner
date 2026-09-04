@@ -56,7 +56,12 @@ function computeStats(assignments, today = new Date()) {
   };
 }
 
+/** The same summary, narrowed to a single course. */
+function computeCourseStats(assignments, courseId, today = new Date()) {
+  return computeStats(assignments.filter((a) => a.courseId === courseId), today);
+}
+
 /* Available to Node for tests; harmless in the browser. */
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { parseDate, isGraded, isOverdue, computeStats };
+  module.exports = { parseDate, isGraded, isOverdue, computeStats, computeCourseStats };
 }
